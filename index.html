@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>鹈鹕骑车抓鱼 3D - Pelican Coastal Cycling & Fish Catching</title>
+  <meta name="description" content="戴头盔墨镜、脖子系红围巾的酷炫鹈鹕在海岸公路上狂飙自行车抓鱼！支持纯Web Audio原创合成立体声BGM、多重摄影机机位、昼夜黄昏赛博光影与动态红围巾物理波浪。">
+  
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚲</text></svg>">
+</head>
+<body>
+
+  <!-- WebGL 3D Canvas Container -->
+  <div id="canvas-container"></div>
+
+  <!-- HUD Top Overlay -->
+  <header class="hud-overlay hud-top">
+    <div class="brand-badge">
+      <div class="brand-title">
+        <span>🚲</span> 鹈鹕骑行日记 · 海岸大抓鱼
+      </div>
+      <div class="brand-sub">戴头盔墨镜 · 系红围巾 · 太平洋海岸公路全速狂飙</div>
+    </div>
+
+    <!-- Stats HUD -->
+    <div class="stats-panel">
+      <div class="stat-card">
+        <span class="stat-label">抓鱼数量</span>
+        <span class="stat-value highlight" id="fish-count">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">总得分</span>
+        <span class="stat-value" id="score-count">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">时速</span>
+        <span class="stat-value"><span id="speed-val">35</span><span class="stat-unit">KM/H</span></span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">里程</span>
+        <span class="stat-value"><span id="dist-val">0.00</span><span class="stat-unit">KM</span></span>
+      </div>
+      <div id="combo-badge" class="combo-tag">COMBO x2</div>
+    </div>
+
+    <!-- Action Toolbar -->
+    <div class="hud-actions">
+      <button id="btn-cam" class="action-btn" title="切换摄影机视角">📷 追随视角</button>
+      <button id="btn-music" class="action-btn" title="开关背景音乐">🎵 音乐: 开</button>
+      <button id="btn-sound" class="action-btn active" title="开关声效">🔊 音效: 开</button>
+      <button id="btn-fullscreen" class="action-btn" title="全屏沉浸体验">⤢ 全屏</button>
+      <button id="btn-help" class="action-btn" title="查看操作指南">❓ 玩法</button>
+    </div>
+  </header>
+
+  <!-- Atmosphere Switcher (Bottom Left) -->
+  <div class="hud-overlay hud-bottom-left">
+    <div class="theme-selector">
+      <button id="btn-day" class="theme-btn active">☀️ 晴空艳阳</button>
+      <button id="btn-sunset" class="theme-btn">🌅 绝美落日</button>
+      <button id="btn-cyber" class="theme-btn">🌃 赛博霓虹</button>
+    </div>
+  </div>
+
+  <!-- Touch & Mobile Controls (Bottom Right) -->
+  <div class="hud-overlay hud-touch">
+    <div class="steer-buttons">
+      <button id="touch-left" class="touch-btn" aria-label="向左变道">
+        ◀
+        <span>左移</span>
+      </button>
+      <button id="touch-right" class="touch-btn" aria-label="向右变道">
+        ▶
+        <span>右移</span>
+      </button>
+    </div>
+    <button id="touch-bell" class="touch-btn" aria-label="敲响车铃">
+      🔔
+      <span>车铃</span>
+    </button>
+    <button id="touch-boost" class="touch-btn" aria-label="加速冲刺">
+      ⚡
+      <span>冲刺</span>
+    </button>
+    <button id="touch-catch" class="touch-btn primary" aria-label="大嘴咬鱼">
+      🐟
+      <span>抓鱼!</span>
+    </button>
+  </div>
+
+  <!-- Floating Popups (Combo, Points, Catch) -->
+  <div id="popups"></div>
+
+  <!-- Help & Instructions Modal -->
+  <div id="help-modal" class="modal-overlay">
+    <div class="modal-card">
+      <h2 class="modal-title">🚲 鹈鹕骑行海岸抓鱼指南</h2>
+      <div class="modal-body">
+        <p>你正在操控一只<strong>头戴专业空气动力学头盔、鼻梁架着黑超墨镜、脖子迎风系着鲜艳红围巾</strong>的超级鹈鹕！骑着公路自行车在海岸公路上狂飙，抓捕从海浪中跃出的飞鱼！</p>
+        <ul>
+          <li><span class="key-pill">A / D</span> 或 <span class="key-pill">← / →</span> 或 <strong>鼠标水平滑动</strong>：左右变道操控自行车</li>
+          <li><span class="key-pill">空格键 Space</span> 或 <strong>点击屏幕 / 点击抓鱼键</strong>：伸颈张开巨大喉囊，一口吞掉飞鱼！</li>
+          <li><span class="key-pill">W</span> 或 <span class="key-pill">Shift</span> 或 <strong>冲刺键</strong>：全力蹬车加速狂飙！</li>
+          <li><span class="key-pill">B</span> 或 <strong>铃铛键</strong>：敲响清脆复古双音车铃（惊起飞鱼高高跃出海面）！</li>
+          <li><span class="key-pill">C</span> 或 <strong>视角按钮</strong>：切换第三人称追随、墨镜第一人称、电影侧拍、360°自由航拍！</li>
+        </ul>
+        <p style="color: #ffd166; font-weight: bold; margin-top: 8px;">💡 贴士：连续成功吞鱼可触发多倍 COMBO 得分加成！金枪鱼得分高达 300 分！</p>
+      </div>
+      <button id="btn-close-help" class="modal-close-btn">出发！立即骑行抓鱼 🚴‍♂️</button>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <!-- Local Vendor Scripts with CDN Fallback -->
+  <script src="vendor/three.min.js"></script>
+  <script src="vendor/OrbitControls.js"></script>
+  <script>
+    if (typeof THREE === 'undefined') {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');
+      document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>');
+    }
+  </script>
+
+  <!-- Modular Application Scripts -->
+  <script src="js/audio.js"></script>
+  <script src="js/models.js"></script>
+  <script src="js/world.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
